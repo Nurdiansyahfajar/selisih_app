@@ -1,5 +1,5 @@
 import streamlit as st
-import fitz  # PyMuPDF
+import fitz
 import re
 from collections import defaultdict
 import pandas as pd
@@ -8,7 +8,6 @@ from io import BytesIO
 st.set_page_config(page_title="Perbandingan Nopol", layout="wide")
 st.title("📊 Perbandingan Nopol DASI vs SAM32")
 
-# ========= Fungsi Ekstraksi =========
 def extract_nopol_sam32(files):
     plat_valid = {'B', 'D', 'E', 'F', 'T', 'Z'}
     hasil = {}
@@ -94,7 +93,7 @@ def extract_nopol_lhp(files):
                     hasil[nopol]['jumlah'] += jumlah
     return hasil
 
-# ========= Upload UI =========
+# === Upload UI ===
 sam32_files = st.file_uploader("📁 Upload File SAM32", type="pdf", accept_multiple_files=True)
 lhp_files = st.file_uploader("📁 Upload File DASI (LHP)", type="pdf", accept_multiple_files=True)
 
@@ -108,19 +107,19 @@ if st.button("🔍 BANDINGKAN") and sam32_files and lhp_files:
     hanya_di_lhp = sorted(nopol_lhp - nopol_sam32)
     hanya_di_sam32 = sorted(nopol_sam32 - nopol_lhp)
 
-    # ========== DASI ==========
-    st.markdown("### 📌 Nopol HANYA di DASI")
+    # === DASI ===
     lhp_data = []
     subtotal_lhp = 0
     for nopol in hanya_di_lhp:
         data = nopol_lhp_map.get(nopol, {})
         lhp_data.append({"nopol": nopol, **data})
         subtotal_lhp += data.get("jumlah", 0)
-        st.write(f"{nopol} → POKOK: {data['pokok']:,}, DENDA: {data['denda']:,}, JUMLAH: {data['jumlah']:,}")
-    st.markdown(f"**Subtotal DASI: {subtotal_lhp:,}**")
 
-    # ========== SAM32 ==========
-    st.markdown("### 📌 Nopol HANYA di SAM32")
+    st.markdown(f"### 📌 Nopol HANYA di DASI ({len(hanya_di_lhp)}) (Subtotal: {subtotal_lhp:,}):")
+    for row in lhp_data:
+        st.write(f"{row['nopol']} → POKOK: {row['pokok']:,}, DENDA: {row['denda']:,}, JUMLAH: {row['jumlah']:,}")
+
+    # === SAM32 ===
     sam32_data = []
     subtotal_sam32 = 0
     for nopol in hanya_di_sam32:
@@ -133,10 +132,12 @@ if st.button("🔍 BANDINGKAN") and sam32_files and lhp_files:
             pokok = denda = jumlah = 0
         sam32_data.append({"nopol": nopol, "pokok": pokok, "denda": denda, "jumlah": jumlah})
         subtotal_sam32 += jumlah
-        st.write(f"{nopol} → POKOK: {pokok:,}, DENDA: {denda:,}, JUMLAH: {jumlah:,}")
-    st.markdown(f"**Subtotal SAM32: {subtotal_sam32:,}**")
 
-    # ========== DOWNLOAD EXCEL ==========
+    st.markdown(f"### 📌 Nopol HANYA di SAM32 ({len(hanya_di_sam32)}) (Subtotal: {subtotal_sam32:,}):")
+    for row in sam32_data:
+        st.write(f"{row['nopol']} → POKOK: {row['pokok']:,}, DENDA: {row['denda']:,}, JUMLAH: {row['jumlah']:,}")
+
+    # === DOWNLOAD EXCEL ===
     df_lhp = pd.DataFrame(lhp_data)
     df_sam32 = pd.DataFrame(sam32_data)
 
